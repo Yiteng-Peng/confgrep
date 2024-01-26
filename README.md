@@ -53,7 +53,6 @@ Use `-f` to choose specific field, default is all field.
 ![screenshot](./img/screenshot.png)
 
 ## TODO
-- [ ] support year filter and field filter for grep
 - [ ] grep in abstract
 - [ ] fuzzy match
 - [ ] complex search logic (`OR` operation)
