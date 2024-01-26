@@ -1,23 +1,15 @@
-from datetime import datetime
-
 import requests
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from bs4 import BeautifulSoup
 
-from .utils import new_logger
+from .config import *
+from .utils import new_logger, get_conf_list
 from .db import Base, Paper
 
 logger = new_logger("DB")
 
 KEYWORD = "kernel"
-CONFERENCES = ["NDSS", "IEEE S&P", "USENIX", "CCS"]
-NAME_MAP = {
-        "NDSS": "ndss",
-        "IEEE S&P": "sp",
-        "USENIX": "uss",
-        "CCS": "ccs",
-        }
 
 engine = sqlalchemy.create_engine(f'sqlite:///papers.db')
 Base.metadata.create_all(engine)
@@ -37,11 +29,15 @@ def paper_exist(conf, year, title, authors, abstract):
     return paper is not None
 
 def get_papers(name, year):
-    cnt = 0
-    conf = NAME_MAP[name]
+    conf_value = NAME_MAP[name]
+    if isinstance(conf_value, tuple):
+        assoc, conf = conf_value[0], conf_value[1]
+    else:
+        assoc, conf = conf_value, conf_value
 
+    cnt = 0
     try:
-        r = requests.get(f"https://dblp.org/db/conf/{conf}/{conf}{year}.html")
+        r = requests.get(f"https://dblp.org/db/conf/{assoc}/{conf}{year}.html")
         assert r.status_code == 200
 
         html = BeautifulSoup(r.text, 'html.parser')
@@ -60,7 +56,9 @@ def get_papers(name, year):
     logger.debug(f"Found {cnt} papers at {name}-{year}...")
 
 
-def build_db():
-    for conf in CONFERENCES:
-        for year in range(2000, datetime.now().year+1):
+def build_db(field, year_low, year_high):
+    conf_list = get_conf_list(field)
+    
+    for conf in conf_list:
+        for year in range(year_low, year_high):
             get_papers(conf, year)

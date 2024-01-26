@@ -6,6 +6,8 @@ from contextlib import contextmanager
 
 import colorlog
 
+from .config import *
+
 # color and format
 logger_formatter = colorlog.ColoredFormatter(
     '[%(name)s][%(levelname)s]%(asctime)s %(log_color)s%(message)s',
@@ -61,3 +63,22 @@ def tmpfile_ctx(prefix=None):
         yield fpath
     finally:
         os.system("rm %s" % fpath)
+
+
+def handle_field_str(field_str):
+    field = [s.strip().upper() for s in field_str.split(",")]
+    return field
+
+def get_conf_list(field):
+    conf_list = []
+    if "ALL" in field:
+        conf_list = ALL_CONFERENCES_LIST
+    else:
+        for field_name in field:
+            try:
+                conf_list.extend(CONFERENCES[field_name])
+            except KeyError:
+                print(f"No such field {field_name}! Pass.")
+        conf_list = list(set(conf_list))
+    return conf_list
+    
